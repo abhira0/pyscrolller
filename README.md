@@ -1,2 +1,2 @@
 # pyscrolller
- Scaper for Scrolller.com
+ Scraper for Scrolller.com
