@@ -353,7 +353,7 @@ def argsParser():
     return parser.parse_args()
 
 
-sub_name = "skinnyfit"
+sub_name = "india"
 args = argsParser()
 utils.killproc("firefox.exe") if args.killff else None
 if args.justkillff:

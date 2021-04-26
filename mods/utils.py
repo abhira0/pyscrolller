@@ -124,7 +124,7 @@ class utils:
 
 class State:
     def __init__(self, description, headless=True) -> None:
-        gecko_path = "/geckodriver/geckodriver.exe"
+        gecko_path = "./geckodriver/geckodriver.exe"
         opts = Options()
         opts.headless = headless
         # opts.set_preference("permissions.default.image", 2)
