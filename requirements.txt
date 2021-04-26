@@ -1,0 +1,7 @@
+selenium
+pandas
+requests
+praw
+termcolor
+beautifulsoup4
+psutil

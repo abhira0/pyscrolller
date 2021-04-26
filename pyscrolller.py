@@ -19,7 +19,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.wait import WebDriverWait
 from termcolor import cprint
 
-from utils import *
+from mods.utils import *
 
 
 class utils(utils):

@@ -124,7 +124,7 @@ class utils:
 
 class State:
     def __init__(self, description, headless=True) -> None:
-        gecko_path = r"E:\Downloads\IDM\Compressed\geckodriver.exe"
+        gecko_path = "/geckodriver/geckodriver.exe"
         opts = Options()
         opts.headless = headless
         # opts.set_preference("permissions.default.image", 2)
@@ -134,90 +134,3 @@ class State:
 
     def openURL(self, url):
         self.driver.get(url=url)
-
-
-class Downloader:
-    class Site:
-        @staticmethod
-        def redgifs(url, verbose=True):
-            try:
-                r = requests.get(url)
-                if r.status_code != 200 and verbose:
-                    cprint(f"❗ Status Code :{r.status_code} for", "red", end="")
-                    cprint(f" '{url}'", "magenta")
-                soup = BeautifulSoup(r.content, "html.parser")
-                sel = soup.select("video source")
-                src = sel[1].get("src")
-                return src
-            except:
-                return None
-
-        @staticmethod
-        def gfycat(url, verbose=True):
-            try:
-                r = requests.get(url)
-                if r.status_code != 200 and verbose:
-                    cprint(f"❗ Status Code :{r.status_code} for", "red", end="")
-                    cprint(f" '{url}'", "magenta")
-                soup = BeautifulSoup(r.content, "html.parser")
-                sel = soup.select("#mp4Source")
-                if sel:
-                    src = sel[0].get("src")
-                    return src
-                else:
-                    src = soup.select("video source")[1].get("src")
-                    return src
-            except:
-                return None
-
-        @staticmethod
-        def imgur(url, verbose=True):
-            state = State(f"Site - {url}")
-
-            def over_18_button():
-                state.driver.find_element_by_css_selector("div.Wall-Button").click()
-
-            try:
-                state.openURL(url)
-                utils.tryExcept(over_18_button, [], 10)
-                media = utils.tryWait(
-                    state.driver.find_elements_by_css_selector,
-                    [".image-placeholder"],
-                    3,
-                    url,
-                    verbose,
-                )
-                src = media[0].get_attribute("src")
-                state.driver.close()
-                return src
-            except Exception as e:
-                print(e)
-                state.driver.close()
-
-    class Album:
-        @staticmethod
-        def imgur(url, verbose=True):
-            state = State(f"Album - {url}")
-
-            def over_18_button():
-                state.driver.find_element_by_css_selector("div.Wall-Button").click()
-
-            try:
-                state.openURL(url)
-                utils.tryExcept(over_18_button, [], 10, url, verbose)
-                media = utils.tryWait(
-                    state.driver.find_elements_by_css_selector,
-                    ["div.Gallery-MainContainer div div div div.imageContainer img"],
-                    8,
-                    url,
-                    verbose,
-                )
-                media_links = [i.get_attribute("src") for i in media]
-                cprint(f"[+] Getting links from imgur album:", "blue", end="")
-                cprint(f" {url}", "magenta")
-                state.driver.close()
-                return list(set(media_links))
-            except Exception as e:
-                if verbose:
-                    cprint(f"❗ {e}", "red")
-                state.driver.close()
