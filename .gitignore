@@ -1,0 +1,5 @@
+.ipynb_checkpoints
+*.log
+indianbabes.json
+__pycache__
+scrollls
