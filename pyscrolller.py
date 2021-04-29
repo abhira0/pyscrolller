@@ -13,13 +13,24 @@ from mods.utils import utils
 
 
 class utils(utils):
-    def updateUltimatum(ultimatum: dict, sub_name: str):
+    def updateUltimatum(ultimatum: dict, sub_name: str) -> None:
+        """Updates the current state of the ultimatum
+
+        Args:
+            ultimatum (dict): Dictionary to be updated
+            sub_name (str): Name of the subreddit
+        """
         _dir = os.getcwd()
         path = _dir + f"\\{sub_name}.json"
         if os.path.exists(path):
             ultimatum.update(utils.jsonLoad(path))
 
-    def joinThread(thread_list):
+    def joinThread(thread_list: list) -> None:
+        """Performs join operation on all the threads present in given thread_list
+
+        Args:
+            thread_list (list): List of threads to be joined
+        """
         if type(thread_list) == type([]):
             for i in thread_list:
                 i.join()
@@ -46,17 +57,23 @@ class pyscrolller:
         if os.path.exists(path_):
             self.ultimatum = utils.jsonLoad(path_)
 
-    def spawnThreads(self, loop_till, class_obj, thread_list):
-        sorts_ = ["top", "hot", "new", "rising"]
-        # sorts_ = ["random"] * 10
+    def spawnThreads(self, loop_till: int, class_obj: object, thread_list: list):
+        """Spawns n threads which calls begin() of given class object
+
+        Args:
+            loop_till (int): number of threads to spawn
+            class_obj (object): One among {Picture, Video, Album}
+            thread_list (list): List of spawned thread objects
+        """
         for i in range(loop_till):
-            sort_key = sorts_[i if i < 4 else 4]
             instance_ = class_obj(self.sub_name, self.ultimatum)
             thr = threading.Thread(target=instance_.begin)
             thread_list.append(thr)
             thr.start()
 
-    def begin(self):
+    def begin(self) -> None:
+        """Begins the spawing of all threads and ignites them\n
+        These threads will scrape the media links from the site"""
         utils.updateUltimatum(self.ultimatum, sub_name)
         save_thread = threading.Thread(target=self.damnSave)
         save_thread.start()

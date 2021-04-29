@@ -3,6 +3,7 @@ import time
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.firefox.webelement import FirefoxWebElement
 
 from .utils import State, utils
 
@@ -61,13 +62,15 @@ class Downloader:
         self.num_of_ele = self.getContentCount(self.typ)
         scrape_url = f"https://scrolller.com/r/{self.sub_name}?filter={self.typ}"
         state = State(f"{str(self.typ).upper()}: {scrape_url}", False)
-        state.openURL(scrape_url)
-        utils.tryExcept(self.welcome_pop, [state.driver], 10)
-        utils.tryExcept(self.over_18_button, [state.driver], 10)
-        time.sleep(3)
-        self.driver = state.driver
-        self.scrapeAll()
-        self.driver.close()
+        try:
+            state.openURL(scrape_url)
+            utils.tryExcept(self.welcome_pop, [state.driver], 10)
+            utils.tryExcept(self.over_18_button, [state.driver], 10)
+            time.sleep(3)
+            self.driver = state.driver
+            self.scrapeAll()
+        finally:
+            self.driver.close()
 
 
 class Picture(Downloader):
@@ -84,15 +87,24 @@ class Picture(Downloader):
         self.sub_name = sub_name
 
     def scrapeAll(self):
+        """Scrolls tha page automatically and calls self.getLinksFromWindow()"""
         screen_height = self.screen_resize(1, 3)
         height = self.scroll(self.driver, 0, 0)
-        stop_flag = max(int(self.num_of_ele * 2), 500)
+        stop_flag = max(int(self.num_of_ele * 5), 1500)
         while stop_flag > 0:
             ret = self.getLinksFromWindow()
-            stop_flag = stop_flag - ret if ret else max(int(self.num_of_ele * 2), 500)
+            stop_flag = stop_flag - ret if ret else max(int(self.num_of_ele * 5), 1500)
             height = self.scroll(self.driver, height, screen_height * 2)
 
-    def getMetadata(self, img_item) -> tuple:
+    def getMetadata(self, img_item: FirefoxWebElement) -> tuple:
+        """Returns the metadata of an image
+
+        Args:
+            img_item (FirefoxWebElement): WebElement of the given image
+
+        Returns:
+            tuple: (title,source_url)
+        """
         src = self.cssFindAttr(img_item, "img", "srcset").split(",")[-1].split(" ")[0]
         title = self.cssFindAttr(img_item, ".item-panel__description", "innerHTML")
         return title, src
@@ -133,17 +145,26 @@ class Video(Downloader):
         self.sub_name = sub_name
 
     def scrapeAll(self):
+        """Scrolls tha page automatically and calls self.getLinksFromWindow()"""
         screen_height = self.screen_resize(2, 3)
         height = self.scroll(self.driver, 0, 0)
-        stop_flag = max(int(self.num_of_ele * 2), 500)
+        stop_flag = max(int(self.num_of_ele * 5), 1500)
         while stop_flag > 0:
             ret = self.getLinksFromWindow()
             if ret == "EXIT52":
                 return
-            stop_flag = stop_flag - ret if ret else max(int(self.num_of_ele * 2), 500)
+            stop_flag = stop_flag - ret if ret else max(int(self.num_of_ele * 5), 1500)
             height = self.scroll(self.driver, height, screen_height * 2)
 
-    def getMetadata(self, item) -> tuple:
+    def getMetadata(self, item: FirefoxWebElement) -> tuple:
+        """Returns the metadata of a video
+
+        Args:
+            img_item (FirefoxWebElement): WebElement of the given video
+
+        Returns:
+            tuple: (title,source_url)
+        """
         source_tags = self.cssFind(item, "video source")
         src = source_tags[-1].get_attribute("src")
         title = self.cssFindAttr(item, "div.item-panel__description", "innerHTML")
