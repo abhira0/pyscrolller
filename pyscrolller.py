@@ -1,13 +1,18 @@
-import json, time
-import threading
+import json
 import os
+import shutil
+import threading
+import time
+
 import requests
 
+from mods.utils import duocprint as dcprint
 from mods.utils import utils
 
 GBL_stop_quering_RESET = 30
 GBL_media_POST_threads = 30
 GBL_album_POST_threads = 30
+GBL_download_threads = 50
 
 
 class utils(utils):
@@ -34,7 +39,111 @@ class utils(utils):
             thread_list.join()
 
 
-class pyscrolller:
+class Downloader:
+    def download(self):
+        utils.makedir(f"{self.cwd}\\scrollls\\{self.sub_name}\\media")
+        self.downloading_threads = []
+        self.sema4 = threading.BoundedSemaphore(GBL_download_threads)
+        self.downloadAlbums()
+        self.downloadPicsVids()
+        utils.joinThread(self.downloading_threads)
+
+    def downloadAlbums(self):
+        for album_url, album_info in self.ultimatum["albums"].items():
+            media_set = set(album_info["mediaUrls"] if album_info["mediaUrls"] else [])
+            downloaded_set = set(
+                album_info["downloaded"] if album_info["downloaded"] else []
+            )
+            diff_list = media_set - downloaded_set
+            if diff_list == []:
+                continue
+            thr = threading.Thread(
+                target=self.downloadAnAlbum,
+                args=(
+                    album_url,
+                    album_info,
+                    diff_list,
+                ),
+            )
+            thr.start()
+            self.downloading_threads.append(thr)
+
+    def downloadAnAlbum(self, album_url, album_info, diff_list):
+        u_album = self.ultimatum["albums"]
+        sub_folder = album_info["title"]
+        __path = f"{self.cwd}\\scrollls\\{self.sub_name}\\media\\{sub_folder}"
+        utils.makedir(__path)
+        for media_url in diff_list:
+            self.sema4.acquire()
+            if self.downloadMedia(media_url, __path):
+                tmp_dict = album_info["downloaded"].append(media_url)
+                tmp_dict = list(set(tmp_dict if tmp_dict else []))
+                u_album[album_url]["downloaded"] = tmp_dict
+
+    def downloadPicsVids(self):
+        u_media = self.ultimatum["medias"]
+        for parent_url, media_info in u_media.items():
+            if u_media[parent_url]["downloaded"]:
+                continue
+            self.sema4.acquire()
+            thr = threading.Thread(
+                target=self.downloadAPicVid,
+                args=(
+                    parent_url,
+                    media_info,
+                ),
+            )
+            thr.start()
+            self.downloading_threads.append(thr)
+
+    def downloadAPicVid(self, parent_url, media_info):
+        sub_folder = None
+        title = media_info["title"]
+        _id = parent_url.split("-")[-1].strip()
+        media_url = media_info["mediaUrl"]
+        __path = f"{self.cwd}\\scrollls\\{self.sub_name}\\media"
+        if self.downloadMedia(media_url, __path, _id, title):
+            self.ultimatum["medias"][parent_url]["downloaded"] = True
+
+    def downloadMedia(self, url, _dir, _id=None, title=None):
+        try:
+            return self.downloadAMedia(url, _dir, _id, title)
+        except Exception as e:
+            print(e)
+            dcprint(f"❗ Connection error while downloading ", f"'{url}'", "r", "m")
+            return False
+
+    def downloadAMedia(self, url, _dir, _id, title):
+        url_filename, ex10sion = url.split("/")[-1].split(".")
+        downloaded = False
+        ex10sion = ex10sion.split("?")[0] if "?" in ex10sion else ex10sion
+        if title:
+            path_ = f"{_dir}\\{title}-{_id}.{ex10sion}"
+        else:
+            path_ = f"{_dir}\\{url_filename}.{ex10sion}"
+        r = requests.get(url, stream=True)
+        try:
+            file_size = str(os.path.getsize(path_)).strip()
+            if r.headers["Content-Length"].strip() == str(file_size):
+                dcprint(f"\t[+] Existing media", f"'{url[:40]}'", "g", "m")
+                utils.clearPrint()
+                downloaded = True
+        except:
+            ...
+        if r.status_code == 200 and not downloaded:
+            r.raw.decode_content = True
+            with open(path_, "wb") as f:
+                shutil.copyfileobj(r.raw, f)
+            downloaded = True
+            dcprint(f"[+] Downloaded media from ", f"'{url}'", "g", "m")
+
+        if not downloaded:
+            dcprint(f"❗ {r.status_code} Error while downloading ", f"'{url}'", "r", "m")
+        self.sema4.release()
+        return downloaded
+
+
+class pyscrolller(Downloader):
     post_url = "https://api.scrolller.com/api/v2/graphql"
     ultimatum = {"albums": {}, "medias": {}}
     save_flag = True  # used by a deamon which saves the ultimatum periodically
@@ -48,10 +157,10 @@ class pyscrolller:
             sub_name (str): Name of the subreddit
         """
         self.sub_name = sub_name
-        __cwd = os.getcwd()
-        utils.makedir(f"{__cwd}\\scrollls")
-        utils.makedir(f"{__cwd}\\scrollls\\{self.sub_name}")
-        path_ = f"{__cwd}\\scrollls\\{self.sub_name}\\{self.sub_name}.json"
+        self.cwd = os.getcwd()
+        utils.makedir(f"{self.cwd}\\scrollls")
+        utils.makedir(f"{self.cwd}\\scrollls\\{self.sub_name}")
+        path_ = f"{self.cwd}\\scrollls\\{self.sub_name}\\{self.sub_name}.json"
         if os.path.exists(path_):
             self.ultimatum = utils.jsonLoad(path_)
 
@@ -179,4 +288,5 @@ class pyscrolller:
 
 
 sc = pyscrolller("IndianBabes")
-sc.begin()
+# sc.begin()
+sc.download()
