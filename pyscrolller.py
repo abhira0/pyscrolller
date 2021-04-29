@@ -5,7 +5,7 @@ import threading
 import time
 
 import requests
-
+import argparse
 from mods.utils import duocprint as dcprint
 from mods.utils import utils
 
@@ -46,7 +46,8 @@ class Downloader:
         utils.makedir(f"{self.cwd}\\scrollls\\{self.sub_name}\\media")
         self.downloading_threads = []
         self.sema4 = threading.BoundedSemaphore(GBL_download_threads)
-        self.downloadAlbums()
+        if not args.ddalb:
+            self.downloadAlbums()
         self.downloadPicsVids()
         utils.joinThread(self.downloading_threads)
         self.quit_damnSave(save_thread)
@@ -289,6 +290,14 @@ class pyscrolller(Downloader):
         self.save_flag = False
         utils.joinThread(save_thread)
 
+
+def argsParser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-ddalb", help="Don not Download Albums", action="store_true")
+    return parser.parse_args()
+
+
+args = argsParser()
 
 sc = pyscrolller("IndianBabes")
 # sc.begin()
