@@ -60,6 +60,19 @@ class utils:
         return name
 
     @staticmethod
+    def cleanPathName(filename: str) -> str:
+        """Cleans the filename according to Windows file system
+
+        Args:
+            filename (str): name of the file to be cleaned
+
+        Returns:
+            str: Clean filename
+        """
+        x = filename
+        return utils.replace_chars(filename, '\/:*?"<>|', "")
+
+    @staticmethod
     def makedir(path: str, verbose=False):
         """Creates a directory only if does not exist and not throw any error if it exists
 
@@ -116,7 +129,7 @@ class utils:
                 cprint(f"[i] Retriving {len(JSON)} links from ", "cyan", end="")
                 cprint(f"{path}", "magenta")
         except:
-            JSON = {}
+            JSON = {"albums": {}, "medias": {}}
         return JSON
 
     @staticmethod
@@ -125,3 +138,11 @@ class utils:
         path = _dir + f"\\{sub_name}.json"
         if os.path.exists(path):
             ultimatum.update(utils.jsonLoad(path))
+
+
+def duocprint(first_str, second_str, first_color, second_color):
+    mapper = {"r": "red", "m": "magenta", "g": "green", "c": "cyan"}
+    first_color = mapper[first_color]
+    second_color = mapper[second_color]
+    cprint(first_str, first_color, end="")
+    cprint(second_str, second_color)
