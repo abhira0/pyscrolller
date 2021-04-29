@@ -4,8 +4,6 @@ import sys
 import time
 
 import psutil
-import requests
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from termcolor import cprint
@@ -107,11 +105,14 @@ class utils:
 
     @staticmethod
     def jsonLoad(path: str):
-        with open(path, "r") as f:
-            JSON = json.load(f)
-            cprint(f" |> ", "cyan", attrs=["blink"], end="")
-            cprint(f"[i] Retriving {len(JSON)} links from ", "cyan", end="")
-            cprint(f"{path}", "magenta")
+        try:
+            with open(path, "r") as f:
+                JSON = json.load(f)
+                cprint(f" |> ", "cyan", attrs=["blink"], end="")
+                cprint(f"[i] Retriving {len(JSON)} links from ", "cyan", end="")
+                cprint(f"{path}", "magenta")
+        except:
+            JSON = {}
         return JSON
 
     @staticmethod
