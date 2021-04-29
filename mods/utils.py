@@ -63,6 +63,12 @@ class utils:
 
     @staticmethod
     def makedir(path: str, verbose=False):
+        """Creates a directory only if does not exist and not throw any error if it exists
+
+        Args:
+            path (str): Path inclusive of directory name
+            verbose (bool, optional): Turns on the verbose mode. Defaults to False.
+        """
         if not os.path.exists(path):
             os.mkdir(path)
             if verbose:

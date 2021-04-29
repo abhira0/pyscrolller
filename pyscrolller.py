@@ -29,14 +29,20 @@ class utils(utils):
 
 class pyscrolller:
     ultimatum = {}
-    save_flag = True
+    save_flag = True  # used by a deamon which saves the ultimatum periodically
     info_dikt = {"downloading": 0, "thread_list": [], "downloaded": 0, "existing": 0}
 
-    def __init__(self, sub_name) -> None:
+    def __init__(self, sub_name: str) -> None:
+        """Class instantiation
+
+        Args:
+            sub_name (str): Name of the subreddit
+        """
         self.sub_name = sub_name
-        utils.makedir(f"{os.getcwd()}\\scrollls")
-        utils.makedir(f"{os.getcwd()}\\scrollls\\{sub_name}")
-        path_ = f"{os.getcwd()}\\scrollls\\{self.sub_name}\\{self.sub_name}.json"
+        __cwd = os.getcwd()
+        utils.makedir(f"{__cwd}\\scrollls")
+        utils.makedir(f"{__cwd}\\scrollls\\{self.sub_name}")
+        path_ = f"{__cwd}\\scrollls\\{self.sub_name}\\{self.sub_name}.json"
         if os.path.exists(path_):
             self.ultimatum = utils.jsonLoad(path_)
 
@@ -46,7 +52,7 @@ class pyscrolller:
         for i in range(loop_till):
             sort_key = sorts_[i if i < 4 else 4]
             instance_ = class_obj(self.sub_name, self.ultimatum)
-            thr = threading.Thread(target=instance_.begin, args=(sort_key,))
+            thr = threading.Thread(target=instance_.begin)
             thread_list.append(thr)
             thr.start()
 
@@ -140,20 +146,32 @@ class pyscrolller:
             cprint(f"❗ {r.status_code} Error while downloading", "red", end="")
             cprint(f"'{url}'", "magenta")
 
-    def damnSave(self):
+    def damnSave(self, time_period: float = 10) -> None:
+        """Calls the saveIt() to saves the ultimatum periodically
+
+        Args:
+            time_period (float, optional): Periodicity in seconds. Defaults to 10.
+        """
+        # Function quits as soon as the self.save_flag is unset
         while self.save_flag:
             try:
                 self.saveIt()
-                time.sleep(10)
+                time.sleep(time_period)
             except Exception as e:
                 ...
 
-    def saveIt(self):
+    def saveIt(self) -> None:
+        """Saves the ultimatum dictionary with all the scraped information locally to hard drive"""
         path_ = f"{os.getcwd()}\\scrollls\\{self.sub_name}\\{self.sub_name}.json"
         with open(path_, "w") as f:
             json.dump(self.ultimatum, f, indent=4)
 
-    def quit_damnSave(self, save_thread):
+    def quit_damnSave(self, save_thread: threading.Thread) -> None:
+        """Makes the daemon which saves the ultimatum periodically quit when scraping is done
+
+        Args:
+            save_thread (threading.Thread): The thread which needed to be terminated
+        """
         self.saveIt()
         self.save_flag = False
         utils.joinThread(save_thread)

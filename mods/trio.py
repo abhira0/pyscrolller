@@ -4,7 +4,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 
-from mods.utils import State, utils
+from .utils import State, utils
 
 
 class Downloader:
@@ -57,11 +57,9 @@ class Downloader:
         self.driver.set_window_size(d_screen_width, d_screen_height)
         return screen_height
 
-    def begin(self, sort_key):
+    def begin(self):
         self.num_of_ele = self.getContentCount(self.typ)
-        scrape_url = (
-            f"https://scrolller.com/r/{self.sub_name}?filter={self.typ}&sort={sort_key}"
-        )
+        scrape_url = f"https://scrolller.com/r/{self.sub_name}?filter={self.typ}"
         state = State(f"{str(self.typ).upper()}: {scrape_url}", False)
         state.openURL(scrape_url)
         utils.tryExcept(self.welcome_pop, [state.driver], 10)
