@@ -41,8 +41,8 @@ class pyscrolller:
             self.ultimatum = utils.jsonLoad(path_)
 
     def spawnThreads(self, loop_till, class_obj, thread_list):
-        # sorts_ = ["top", "hot", "new", "rising"]
-        sorts_ = ["random"] * 10
+        sorts_ = ["top", "hot", "new", "rising"]
+        # sorts_ = ["random"] * 10
         for i in range(loop_till):
             sort_key = sorts_[i if i < 4 else 4]
             instance_ = class_obj(self.sub_name, self.ultimatum)
