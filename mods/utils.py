@@ -60,6 +60,19 @@ class utils:
         return name
 
     @staticmethod
+    def cleanPathName(filename: str) -> str:
+        """Cleans the filename according to Windows file system
+
+        Args:
+            filename (str): name of the file to be cleaned
+
+        Returns:
+            str: Clean filename
+        """
+        x = filename
+        return utils.replace_chars(filename, '\/:*?"<>|', "")
+
+    @staticmethod
     def makedir(path: str, verbose=False):
         """Creates a directory only if does not exist and not throw any error if it exists
 
