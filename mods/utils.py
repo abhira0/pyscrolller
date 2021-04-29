@@ -4,8 +4,6 @@ import sys
 import time
 
 import psutil
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
 from termcolor import cprint
 
 
@@ -127,17 +125,3 @@ class utils:
         path = _dir + f"\\{sub_name}.json"
         if os.path.exists(path):
             ultimatum.update(utils.jsonLoad(path))
-
-
-class State:
-    def __init__(self, description, headless=True) -> None:
-        gecko_path = "./geckodriver/geckodriver.exe"
-        opts = Options()
-        opts.headless = headless
-        # opts.set_preference("permissions.default.image", 2)
-        # opts.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", "false")
-        cprint(f"\t[i] Instantiating a headless Firefox: '{description}'", "cyan")
-        self.driver = webdriver.Firefox(executable_path=gecko_path, options=opts)
-
-    def openURL(self, url):
-        self.driver.get(url=url)
