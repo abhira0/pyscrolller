@@ -41,12 +41,15 @@ class utils(utils):
 
 class Downloader:
     def download(self):
+        save_thread = threading.Thread(target=self.damnSave)
+        save_thread.start()
         utils.makedir(f"{self.cwd}\\scrollls\\{self.sub_name}\\media")
         self.downloading_threads = []
         self.sema4 = threading.BoundedSemaphore(GBL_download_threads)
         self.downloadAlbums()
         self.downloadPicsVids()
         utils.joinThread(self.downloading_threads)
+        self.quit_damnSave(save_thread)
 
     def downloadAlbums(self):
         for album_url, album_info in self.ultimatum["albums"].items():
@@ -69,16 +72,16 @@ class Downloader:
             self.downloading_threads.append(thr)
 
     def downloadAnAlbum(self, album_url, album_info, diff_list):
-        u_album = self.ultimatum["albums"]
         sub_folder = album_info["title"]
         __path = f"{self.cwd}\\scrollls\\{self.sub_name}\\media\\{sub_folder}"
         utils.makedir(__path)
         for media_url in diff_list:
             self.sema4.acquire()
             if self.downloadMedia(media_url, __path):
-                tmp_dict = album_info["downloaded"].append(media_url)
+                tmp_dict = album_info["downloaded"]
+                tmp_dict.append(media_url)
                 tmp_dict = list(set(tmp_dict if tmp_dict else []))
-                u_album[album_url]["downloaded"] = tmp_dict
+                self.ultimatum["albums"][album_url]["downloaded"] = tmp_dict
 
     def downloadPicsVids(self):
         u_media = self.ultimatum["medias"]
