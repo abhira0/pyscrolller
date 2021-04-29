@@ -129,7 +129,7 @@ class utils:
                 cprint(f"[i] Retriving {len(JSON)} links from ", "cyan", end="")
                 cprint(f"{path}", "magenta")
         except:
-            JSON = {}
+            JSON = {"albums": {}, "medias": {}}
         return JSON
 
     @staticmethod
