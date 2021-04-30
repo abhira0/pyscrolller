@@ -27,6 +27,7 @@ __Written in: Python 3__<br>
 1. Create and open a textfile named list.txt under the cloned repository
 1. Put your url links of papers and journals and save list.txt
 1. Open the Windows Terminal (preferred)/ Powershell / command prompt inside cloned directory
+1. Install dependencies using `pip install -r requirements.txt`
 1. Type in "`python pyscrolller.py -s SUBREDDITNAME [-d / --download]`" and hit enter
 1. A step to automation ;)
 
