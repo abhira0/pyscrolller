@@ -2,7 +2,7 @@ import os
 import json
 from termcolor import cprint
 
-p = f"{os.getcwd()}\\scrollls\\IndianBabes\\IndianBabes.json"
+p = f"{os.getcwd()}\\scrollls\\chi_love\\chi_love.json"
 
 with open(p, "r") as f:
     dikt = json.load(f)
