@@ -5,7 +5,7 @@ import threading
 import time
 
 import requests
-
+import argparse
 from mods.utils import duocprint as dcprint
 from mods.utils import utils
 
@@ -41,12 +41,16 @@ class utils(utils):
 
 class Downloader:
     def download(self):
+        save_thread = threading.Thread(target=self.damnSave)
+        save_thread.start()
         utils.makedir(f"{self.cwd}\\scrollls\\{self.sub_name}\\media")
         self.downloading_threads = []
         self.sema4 = threading.BoundedSemaphore(GBL_download_threads)
-        self.downloadAlbums()
+        if not args.ddalb:
+            self.downloadAlbums()
         self.downloadPicsVids()
         utils.joinThread(self.downloading_threads)
+        self.quit_damnSave(save_thread)
 
     def downloadAlbums(self):
         for album_url, album_info in self.ultimatum["albums"].items():
@@ -69,16 +73,16 @@ class Downloader:
             self.downloading_threads.append(thr)
 
     def downloadAnAlbum(self, album_url, album_info, diff_list):
-        u_album = self.ultimatum["albums"]
         sub_folder = album_info["title"]
         __path = f"{self.cwd}\\scrollls\\{self.sub_name}\\media\\{sub_folder}"
         utils.makedir(__path)
         for media_url in diff_list:
             self.sema4.acquire()
             if self.downloadMedia(media_url, __path):
-                tmp_dict = album_info["downloaded"].append(media_url)
+                tmp_dict = album_info["downloaded"]
+                tmp_dict.append(media_url)
                 tmp_dict = list(set(tmp_dict if tmp_dict else []))
-                u_album[album_url]["downloaded"] = tmp_dict
+                self.ultimatum["albums"][album_url]["downloaded"] = tmp_dict
 
     def downloadPicsVids(self):
         u_media = self.ultimatum["medias"]
@@ -200,6 +204,10 @@ class pyscrolller(Downloader):
             thr.start()
             thread_list.append(thr)
         utils.joinThread(thread_list)
+        __al_in_len = len(
+            [i for i, j in self.ultimatum["albums"].items() if j["mediaUrls"] != []]
+        )
+        print(f"ULTIMATUM [{self.album_len}[{__al_in_len}],{self.media_len}]")
 
     def processSubResponse(self, sema4) -> int:
         children_items = self.querySubreddit()
@@ -287,6 +295,29 @@ class pyscrolller(Downloader):
         utils.joinThread(save_thread)
 
 
-sc = pyscrolller("IndianBabes")
-# sc.begin()
-sc.download()
+def argsParser():
+    parser = argparse.ArgumentParser(
+        description="Scraper for https://www.scrolller.com"
+    )
+    parser.add_argument("-s", "--subname", help="Name of the subreddit", required=True)
+    parser.add_argument(
+        "-d",
+        "--download",
+        help="Download after scraping the links",
+        action="store_true",
+    )
+    parser.add_argument("-ddalb", help="Don not Download Albums", action="store_true")
+    parser.add_argument(
+        "-ddpv",
+        help="Don not Download Pics and Videos which are not in any albums",
+        action="store_true",
+    )
+    return parser.parse_args()
+
+
+args = argsParser()
+"IndianBabes"
+sc = pyscrolller(args.subname)
+sc.begin()
+if args.download:
+    sc.download()

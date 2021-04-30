@@ -125,8 +125,17 @@ class utils:
         try:
             with open(path, "r") as f:
                 JSON = json.load(f)
+                picsvids_len = len(JSON["medias"])
+                album_len = len(JSON["albums"])
+                album_media_len = len(
+                    [i for j, jv in JSON["albums"].items() for i in jv["mediaUrls"]]
+                )
                 cprint(f" |> ", "cyan", attrs=["blink"], end="")
-                cprint(f"[i] Retriving {len(JSON)} links from ", "cyan", end="")
+                cprint(
+                    f"[i] Retriving [{album_len}[{album_media_len}],{picsvids_len}] links from ",
+                    "cyan",
+                    end="",
+                )
                 cprint(f"{path}", "magenta")
         except:
             JSON = {"albums": {}, "medias": {}}
