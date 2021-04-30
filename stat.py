@@ -49,23 +49,26 @@ for i in all_d_media:
     count_d_x10sion[x10] = count_d_x10sion.get(x10, 0) + 1
 
 
-cprint("------Albums------", "cyan")
-print("Downloaded Albums:       ", end="")
+cprint("--------Albums--------", "cyan")
+print("Downloaded Albums      : ", end="")
 cprint(f"{count_d_album}/{count_album}", "green", end="")
 cprint(f"\t{count_album-count_d_album} albums", "red")
 print("Downloaded Album Medias: ", end="")
 cprint(f"{count_d_album_media}/{count_album_media}", "green", end="")
 cprint(f"\t{count_album_media-count_d_album_media} medias", "red")
-cprint("------Medias------", "cyan")
-print("Downloaded Medias:       ", end="")
+cprint("--------Medias--------", "cyan")
+print("Downloaded Medias      : ", end="")
 cprint(f"{count_d_picsvids}/{count_picsvids}", "green", end="")
 cprint(f"\t{count_picsvids-count_d_picsvids} medias", "red")
-cprint("------All Media------", "cyan")
-print("Downloaded Medias:       ", end="")
+cprint("------All Media-------", "cyan")
+print("Downloaded Medias      : ", end="")
 cprint(f"{count_all_d_media}/{count_all_media}", "green", end="")
 cprint(f"\t{count_all_media-count_all_d_media} medias", "red")
 for i, j in count_ex10sion.items():
-    k = count_d_x10sion[i]
+    try:
+        k = count_d_x10sion[i]
+    except:
+        k = 0
     cprint(f"{i}: ", "magenta", end="")
     cprint(f"{k}/{j}", "green", end="")
     cprint(f"\t{j-k} medias", "red")

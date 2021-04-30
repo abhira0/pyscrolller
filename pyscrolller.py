@@ -204,6 +204,10 @@ class pyscrolller(Downloader):
             thr.start()
             thread_list.append(thr)
         utils.joinThread(thread_list)
+        __al_in_len = len(
+            [i for i, j in self.ultimatum["albums"].items() if j["mediaUrls"] != []]
+        )
+        print(f"ULTIMATUM [{self.album_len}[{__al_in_len}],{self.media_len}]")
 
     def processSubResponse(self, sema4) -> int:
         children_items = self.querySubreddit()
@@ -292,13 +296,28 @@ class pyscrolller(Downloader):
 
 
 def argsParser():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Scraper for https://www.scrolller.com"
+    )
+    parser.add_argument("-s", "--subname", help="Name of the subreddit", required=True)
+    parser.add_argument(
+        "-d",
+        "--download",
+        help="Download after scraping the links",
+        action="store_true",
+    )
     parser.add_argument("-ddalb", help="Don not Download Albums", action="store_true")
+    parser.add_argument(
+        "-ddpv",
+        help="Don not Download Pics and Videos which are not in any albums",
+        action="store_true",
+    )
     return parser.parse_args()
 
 
 args = argsParser()
-
-sc = pyscrolller("IndianBabes")
-# sc.begin()
-sc.download()
+"IndianBabes"
+sc = pyscrolller(args.subname)
+sc.begin()
+if args.download:
+    sc.download()
