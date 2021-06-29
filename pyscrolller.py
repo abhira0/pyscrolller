@@ -9,7 +9,7 @@ import argparse
 from mods.utils import duocprint as dcprint
 from mods.utils import utils
 
-GBL_stop_quering_RESET = 30
+GBL_stop_quering_RESET = 500
 GBL_media_POST_threads = 30
 GBL_album_POST_threads = 30
 GBL_download_threads = 50
@@ -46,7 +46,7 @@ class Downloader:
         utils.makedir(f"{self.cwd}\\scrollls\\{self.sub_name}\\media")
         self.downloading_threads = []
         self.sema4 = threading.BoundedSemaphore(GBL_download_threads)
-        if not args.ddalb:
+        if not args.na:
             self.downloadAlbums()
         self.downloadPicsVids()
         utils.joinThread(self.downloading_threads)
@@ -151,7 +151,6 @@ class pyscrolller(Downloader):
     post_url = "https://api.scrolller.com/api/v2/graphql"
     ultimatum = {"albums": {}, "medias": {}}
     save_flag = True  # used by a deamon which saves the ultimatum periodically
-    stop_quering = GBL_stop_quering_RESET
     media_len = 0
     album_len = 0
 
@@ -178,6 +177,7 @@ class pyscrolller(Downloader):
         self.quit_damnSave(save_thread)
 
     def threadSubreddit(self):
+        self.stop_quering = max(GBL_stop_quering_RESET, len(self.ultimatum["medias"]))
         sema4 = threading.BoundedSemaphore(GBL_media_POST_threads)
         thread_list = []
         while True:
@@ -194,13 +194,8 @@ class pyscrolller(Downloader):
         thread_list = []
         for album_url in self.ultimatum["albums"].keys():
             sema4.acquire()
-            thr = threading.Thread(
-                target=self.processAlbResponse,
-                args=(
-                    album_url,
-                    sema4,
-                ),
-            )
+            args = tuple([album_url, sema4])
+            thr = threading.Thread(target=self.processAlbResponse, args=args)
             thr.start()
             thread_list.append(thr)
         utils.joinThread(thread_list)
@@ -229,9 +224,11 @@ class pyscrolller(Downloader):
         print(f"ULTIMATUM [{__al_len},{__me_len}]", end="\r")
         time.sleep(0.2)
         if new_entity == 0:
-            self.stop_quering -= 1
+            self.stop_quering -= (len(children_items)) - new_entity
         else:
-            self.stop_quering = GBL_stop_quering_RESET
+            self.stop_quering = max(
+                GBL_stop_quering_RESET, len(self.ultimatum["medias"])
+            )
         sema4.release()
 
     def querySubreddit(self):
@@ -306,18 +303,26 @@ def argsParser():
         help="Download after scraping the links",
         action="store_true",
     )
-    parser.add_argument("-ddalb", help="Don not Download Albums", action="store_true")
     parser.add_argument(
-        "-ddpv",
-        help="Don not Download Pics and Videos which are not in any albums",
+        "-h",
+        "--harvest",
+        help="Harvest all the links of medias to download as the next step",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-na", help="Do not download Albums (No Albums)", action="store_true"
+    )
+    parser.add_argument(
+        "-nm",
+        help="Do not download Pics and Videos which are not in any albums (No Media)",
         action="store_true",
     )
     return parser.parse_args()
 
 
 args = argsParser()
-"IndianBabes"
 sc = pyscrolller(args.subname)
-sc.begin()
+if sc.harvest:
+    sc.begin()
 if args.download:
     sc.download()
