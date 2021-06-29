@@ -48,7 +48,8 @@ class Downloader:
         self.sema4 = threading.BoundedSemaphore(GBL_download_threads)
         if not args.na:
             self.downloadAlbums()
-        self.downloadPicsVids()
+        if not args.nm:
+            self.downloadPicsVids()
         utils.joinThread(self.downloading_threads)
         self.quit_damnSave(save_thread)
 
@@ -119,28 +120,20 @@ class Downloader:
 
     def downloadAMedia(self, url, _dir, _id, title):
         url_filename, ex10sion = url.split("/")[-1].split(".")
-        downloaded = False
         ex10sion = ex10sion.split("?")[0] if "?" in ex10sion else ex10sion
         if title:
             path_ = f"{_dir}\\{title}-{_id}.{ex10sion}"
         else:
             path_ = f"{_dir}\\{url_filename}.{ex10sion}"
         r = requests.get(url, stream=True)
-        try:
-            file_size = str(os.path.getsize(path_)).strip()
-            if r.headers["Content-Length"].strip() == str(file_size):
-                dcprint(f"\t[+] Existing media", f"'{url[:40]}'", "g", "m")
-                utils.clearPrint()
-                downloaded = True
-        except:
-            ...
+        downloaded = os.path.exists(path_)
         if r.status_code == 200 and not downloaded:
             r.raw.decode_content = True
-            with open(path_, "wb") as f:
+            with open(path_ + ".part", "wb") as f:
                 shutil.copyfileobj(r.raw, f)
             downloaded = True
+            os.rename(path_ + ".part", path_)
             dcprint(f"[+] Downloaded media from ", f"'{url}'", "g", "m")
-
         if not downloaded:
             dcprint(f"❗ {r.status_code} Error while downloading ", f"'{url}'", "r", "m")
         self.sema4.release()
@@ -296,7 +289,7 @@ def argsParser():
     parser = argparse.ArgumentParser(
         description="Scraper for https://www.scrolller.com"
     )
-    parser.add_argument("-s", "--subname", help="Name of the subreddit", required=True)
+    parser.add_argument("subname", help="Name of the subreddit", type=str)
     parser.add_argument(
         "-d",
         "--download",
@@ -304,7 +297,7 @@ def argsParser():
         action="store_true",
     )
     parser.add_argument(
-        "-h",
+        "-r",
         "--harvest",
         help="Harvest all the links of medias to download as the next step",
         action="store_true",
@@ -322,7 +315,7 @@ def argsParser():
 
 args = argsParser()
 sc = pyscrolller(args.subname)
-if sc.harvest:
+if args.harvest:
     sc.begin()
 if args.download:
     sc.download()
