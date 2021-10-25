@@ -2,3 +2,6 @@ requests
 termcolor
 psutil
 argparse
+pyopenssl
+pyasn1
+ndg-httpsclient

@@ -102,7 +102,6 @@ class Downloader:
             self.downloading_threads.append(thr)
 
     def downloadAPicVid(self, parent_url, media_info):
-        sub_folder = None
         title = media_info["title"]
         _id = parent_url.split("-")[-1].strip()
         media_url = media_info["mediaUrl"]
@@ -111,20 +110,26 @@ class Downloader:
             self.ultimatum["medias"][parent_url]["downloaded"] = True
 
     def downloadMedia(self, url, _dir, _id=None, title=None):
+        ret = None
         try:
-            return self.downloadAMedia(url, _dir, _id, title)
+            ret = self.downloadAMedia(url, _dir, _id, title)
         except Exception as e:
-            print(e)
-            dcprint(f"❗ Connection error while downloading ", f"'{url}'", "r", "m")
-            return False
+            dcprint(f"❗ Error while downloading ", f"'{url}'", "r", "m")
+            dcprint("\tReason: ", e, "r", "r")
+            ret = False
+        finally:
+            self.sema4.release()
+        return ret
 
     def downloadAMedia(self, url, _dir, _id, title):
         url_filename, ex10sion = url.split("/")[-1].split(".")
         ex10sion = ex10sion.split("?")[0] if "?" in ex10sion else ex10sion
         if title:
-            path_ = f"{_dir}\\{title}-{_id}.{ex10sion}"
+            title = title.replace(".", "")
+            path_ = fr"{_dir}\\{title}-{_id}.{ex10sion}"
         else:
-            path_ = f"{_dir}\\{url_filename}.{ex10sion}"
+            url_filename = url_filename.replace(".", "")
+            path_ = fr"{_dir}\\{url_filename}.{ex10sion}"
         r = requests.get(url, stream=True)
         downloaded = os.path.exists(path_)
         if r.status_code == 200 and not downloaded:
@@ -136,7 +141,6 @@ class Downloader:
             dcprint(f"[+] Downloaded media from ", f"'{url}'", "g", "m")
         if not downloaded:
             dcprint(f"❗ {r.status_code} Error while downloading ", f"'{url}'", "r", "m")
-        self.sema4.release()
         return downloaded
 
 
@@ -259,7 +263,7 @@ class pyscrolller(Downloader):
     def damnSave(self, time_period: float = 5) -> None:
         """Calls the saveIt() to saves the ultimatum periodically
         Args:
-            time_period (float, optional): Periodicity in seconds. Defaults to 10.
+            time_period (float, optional): Periodicity in seconds. Defaults to 5.
         """
         # Function quits as soon as the self.save_flag is unset
         while self.save_flag:
