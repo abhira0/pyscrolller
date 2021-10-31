@@ -74,7 +74,7 @@ class Downloader:
             self.downloading_threads.append(thr)
 
     def downloadAnAlbum(self, album_url, album_info, diff_list):
-        sub_folder = album_info["title"]
+        sub_folder = album_info["title"].replace(".", "")[:50]
         __path = f"{self.cwd}\\scrollls\\{self.sub_name}\\media\\{sub_folder}"
         utils.makedir(__path)
         for media_url in diff_list:
@@ -110,13 +110,9 @@ class Downloader:
             self.ultimatum["medias"][parent_url]["downloaded"] = True
 
     def downloadMedia(self, url, _dir, _id=None, title=None):
-        ret = None
+        ret = False
         try:
             ret = self.downloadAMedia(url, _dir, _id, title)
-        except Exception as e:
-            dcprint(f"❗ Error while downloading ", f"'{url}'", "r", "m")
-            dcprint("\tReason: ", e, "r", "r")
-            ret = False
         finally:
             self.sema4.release()
         return ret
@@ -125,23 +121,30 @@ class Downloader:
         url_filename, ex10sion = url.split("/")[-1].split(".")
         ex10sion = ex10sion.split("?")[0] if "?" in ex10sion else ex10sion
         if title:
-            title = title.replace(".", "")
+            title = title.replace(".", "")[:40]
             path_ = fr"{_dir}\\{title}-{_id}.{ex10sion}"
         else:
-            url_filename = url_filename.replace(".", "")
+            url_filename = url_filename.replace(".", "")[:40]
             path_ = fr"{_dir}\\{url_filename}.{ex10sion}"
-        r = requests.get(url, stream=True)
         downloaded = os.path.exists(path_)
-        if r.status_code == 200 and not downloaded:
-            r.raw.decode_content = True
-            with open(path_ + ".part", "wb") as f:
-                shutil.copyfileobj(r.raw, f)
-            downloaded = True
-            os.rename(path_ + ".part", path_)
-            dcprint(f"[+] Downloaded media from ", f"'{url}'", "g", "m")
-        if not downloaded:
-            dcprint(f"❗ {r.status_code} Error while downloading ", f"'{url}'", "r", "m")
-        return downloaded
+        try:
+            r = requests.get(url, stream=True)
+            if r.status_code == 200 and not downloaded:
+                r.raw.decode_content = True
+                with open(path_ + ".part", "wb") as f:
+                    shutil.copyfileobj(r.raw, f)
+                downloaded = True
+                os.rename(path_ + ".part", path_)
+                dcprint(f"[+] Downloaded media from ", f"'{url}'", "g", "m")
+            if not downloaded:
+                dcprint(
+                    f"❗ {r.status_code} Error while downloading ", f"'{url}'", "r", "m"
+                )
+        except Exception as e:
+            dcprint(f"❗ Error while downloading ", f"'{url}'", "r", "m")
+            # dcprint("\tReason: ", e, "r", "r")
+        finally:
+            return downloaded
 
 
 class pyscrolller(Downloader):
