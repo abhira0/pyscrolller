@@ -1,5 +1,5 @@
 # pyscrolller
-
+NOTE: This project has been extended into another generic project called [Database Scraper (dbscr)](https://github.com/abhira0/dbscr)
 #### A CLI Tool<br>
 Scraper and downloader for https://www.Scrolller.com<br>
 __Written in: Python 3__<br>
